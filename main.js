@@ -11,15 +11,14 @@ const myArgs = process.argv.slice(2);
 const protocol = myArgs[0] ?? "wss";
 const isEnabledWebsocketServer = myArgs[1];
 
-var URL;
+var URL = "";
 switch (protocol) {
   case "wss":
     URL = "wss://ws.postman-echo.com/raw";
     break;
   case "ws":
-    URL =
-      "ws://echo.websocket.events";
-      break;
+    URL = "ws://echo.websocket.events";
+    break;
   default:
     // New feature, allow passing the custom URL
     URL = protocol;
@@ -30,20 +29,22 @@ switch (protocol) {
 // Websocket Server Side (Optional)
 ////////////////////////
 var websocketServer;
-if (isEnabledWebsocketServer === 'server') {
+if (isEnabledWebsocketServer === "server") {
   websocketServer = new WebSocket.WebSocketServer({ port: 8080 });
-  websocketServer.on('connection', function connection(ws) {
-    ws.on('error', console.error);
-  
-    ws.on('message', function message(data) {
-      console.log('[NodeJS] Server received: %s', data);
+  websocketServer.on("connection", function connection(ws) {
+    ws.on("error", console.error);
+
+    ws.on("message", function message(data) {
+      console.log("[NodeJS] Server received: %s", data);
       ws.send(data);
     });
-  
-    ws.send('Hello from Proxyman Websocket Server at port 8080!');
+
+    ws.send("Hello from Proxyman Websocket Server at port 8080!");
   });
-  console.log("✅ Local Websocket started at port 8080")
+  console.log("✅ Local Websocket started at port 8080");
 }
+
+let id = 1;
 
 ////////////////////////
 // Websocket Client Side
@@ -57,31 +58,96 @@ const ws = new WebSocket(URL, { agent: agent });
 // const ws = new WebSocket(URL);
 
 var shouldExit = false;
-console.log(`WS connection is opened! URL = ${URL}`);
+console.log(`WS connection is opened! URL = ${URL}\n`);
 
-ws.on("open", function open() {
+// Listen user's command
+const readline = require("readline");
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
+function processCommand(command) {
+  rl.question("Type send or exit:", (newCommand) => {
+    const cmd = newCommand.toLowerCase();
+    if (cmd === "exit") {
+      ws.close();
+      rl.close();
+      return;
+    }
+
+    if (cmd === "send") {
+      handleWebsocketOpen();
+    } else {
+      console.log("wrong input");
+    }
+
+    processCommand(command);
+  });
+}
+
+rl.question("Type send or exit:", (command) => {
+  const cmd = command.toLowerCase();
+  if (cmd === "exit") {
+    ws.close();
+    rl.close();
+    return;
+  }
+
+  if (cmd === "send") {
+    handleWebsocketOpen();
+  } else {
+    console.log("wrong input");
+  }
+
+  processCommand(command);
+});
+
+const handleWebsocketOpen = () => {
   // Text
   console.log("[NodeJS] Websocket Client is opened!");
-  ws.send("Hello from Proxyman Websocket Client");
+  ws.send(`Hello from Proxyman Websocket Client ${id}`);
+  id += 1;
 
   // JSON
-  const obj = { name: "John", age: 30, city: "New York" };
+  const obj = { name: "John", age: 30, city: "New York", id };
   const myJSON = JSON.stringify(obj);
-  console.log("[NodeJS] ⬆️ Send JSON 1");
+  console.log(`[NodeJS] ⬆️ Send JSON ${id}`);
   ws.send(myJSON);
+  id += 1;
 
   // Ping
   console.log("[NodeJS] ⬆️ Ping");
   ws.ping();
-});
+};
 
-ws.on("message", function message(data) {
+const handleWebsocketMessage = (data) => {
   console.log("[NodeJS] ⬇️ Received: %s", data);
 
   if (shouldExit) {
     ws.close();
   }
+};
+
+const handleWebsocketPong = () => {
+  console.log("[NodeJS] ⬇️ Pong!");
+
+  // try to send a JSON again
+  const obj = { name: "Noah", items: [1, 2, 3, 4], id };
+  const myJSON = JSON.stringify(obj);
+  console.log(`[NodeJS] ⬆️ Send JSON ${id}`);
+  ws.send(myJSON);
+
+  id += 1;
+};
+
+const handleWebsocketClose = () => {
+  console.log("[NodeJS] Closed!");
+  exit(0);
+};
+
+ws.on("message", function message(data) {
+  handleWebsocketMessage(data);
 });
 
 ws.on("error", function message(err) {
@@ -89,20 +155,9 @@ ws.on("error", function message(err) {
 });
 
 ws.on("pong", () => {
-  console.log("[NodeJS] ⬇️ Pong!");
-
-  // try to send a JSON again
-  const obj = { name: "Noah", items: [1, 2, 3, 4] };
-  const myJSON = JSON.stringify(obj);
-  console.log("[NodeJS] ⬆️ Send JSON 2");
-  ws.send(myJSON);
-
-  // exit
-  shouldExit = true;
+  handleWebsocketPong();
 });
 
 ws.on("close", function clear() {
-  console.log("[NodeJS] Closed!");
-  exit(0);
-
+  handleWebsocketClose();
 });
