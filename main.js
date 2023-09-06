@@ -4,36 +4,6 @@ var HttpsProxyAgent = require("https-proxy-agent");
 var url = require("url");
 const { exit } = require("process");
 
-var msgpack = require("msgpack5")(), // namespace our extensions
-  a = new MyType(2, "a"),
-  encode = msgpack.encode,
-  decode = msgpack.decode;
-msgpack.register(0x42, MyType, mytipeEncode, mytipeDecode);
-
-function MyType(size, value) {
-  this.value = value;
-  this.size = size;
-}
-
-function mytipeEncode(obj) {
-  var buf = new Buffer(obj.size);
-  buf.fill(obj.value);
-  return buf;
-}
-
-function mytipeDecode(data) {
-  var result = new MyType(data.length, data.toString("utf8", 0, 1)),
-    i;
-
-  for (i = 0; i < data.length; i++) {
-    if (data.readUInt8(0) != data.readUInt8(i)) {
-      throw new Error("should all be the same");
-    }
-  }
-
-  return result;
-}
-
 // Approve Proxyman Certificate
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -50,8 +20,7 @@ switch (protocol) {
     URL = "ws://echo.websocket.events";
     break;
   default:
-    // New feature, allow passing the custom URL
-    URL = protocol;
+    URL = "ws://echo.websocket.events";
     break;
 }
 
@@ -87,9 +56,6 @@ var agent = new HttpsProxyAgent(options);
 const ws = new WebSocket(URL, { agent: agent });
 // const ws = new WebSocket(URL);
 
-var shouldExit = false;
-console.log(`WS connection is opened! URL = ${URL}\n`);
-
 // Listen user's command
 const readline = require("readline");
 const rl = readline.createInterface({
@@ -98,7 +64,7 @@ const rl = readline.createInterface({
 });
 
 function processCommand(command) {
-  rl.question("Please type send", (newCommand) => {
+  rl.question("Please send or exit:\n", (newCommand) => {
     const cmd = newCommand.toLowerCase();
     if (cmd === "exit") {
       ws.close();
@@ -116,7 +82,7 @@ function processCommand(command) {
   });
 }
 
-rl.question("Please type send", (command) => {
+rl.question("Please type send or exit:\n", (command) => {
   const cmd = command.toLowerCase();
   if (cmd === "exit") {
     ws.close();
@@ -139,12 +105,6 @@ const handleWebsocketOpen = () => {
   ws.send(`Hello from Proxyman Websocket Client ${id}`);
   id += 1;
 
-  const ans = encode({ hello: "world", city: "Sai Gon" });
-  ws.send(ans);
-
-  const binaryData = new Uint8Array([0x04, 0x05, 0x06]); // Replace with your binary data
-  ws.send(binaryData);
-
   // JSON
   const obj = { name: "John", age: 30, city: "New York", id };
   const myJSON = JSON.stringify(obj);
@@ -159,10 +119,6 @@ const handleWebsocketOpen = () => {
 
 const handleWebsocketMessage = (data) => {
   console.log("[NodeJS] ⬇️ Received: %s", data);
-
-  if (shouldExit) {
-    ws.close();
-  }
 };
 
 const handleWebsocketPong = () => {
