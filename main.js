@@ -1,8 +1,10 @@
 var WebSocket = require("ws");
-
 var HttpsProxyAgent = require("https-proxy-agent");
 var url = require("url");
 const { exit } = require("process");
+const msgpack = require("@msgpack/msgpack");
+const zlib = require("zlib");
+const { compress, decompress } = require("@mongodb-js/zstd");
 
 // Approve Proxyman Certificate
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -25,7 +27,7 @@ switch (protocol) {
 }
 
 ////////////////////////
-// Websocket Server Side (Optional)
+// WebSocket Server Side (Optional)
 ////////////////////////
 var websocketServer;
 if (isEnabledWebsocketServer === "server") {
@@ -34,103 +36,95 @@ if (isEnabledWebsocketServer === "server") {
     ws.on("error", console.error);
 
     ws.on("message", function message(data) {
-      console.log("[NodeJS] Server received: %s", data);
-      ws.send(data);
+      try {
+        const decoded = msgpack.decode(data);
+        console.log("[NodeJS] Server received (decoded):", decoded);
+        ws.send(data); // Echo back
+      } catch (e) {
+        console.log("[NodeJS] Server received (raw):", data);
+        ws.send(data); // Echo raw
+      }
     });
 
-    ws.send("Hello from Proxyman Websocket Server at port 8080!");
+    const greeting = msgpack.encode({
+      type: "greeting",
+      data: "Hello from Proxyman WebSocket Server at port 8080!",
+    });
+    ws.send(greeting);
   });
-  console.log("✅ Local Websocket started at port 8080");
+  console.log("✅ Local WebSocket server started at port 8080");
 }
 
 let id = 1;
 
 ////////////////////////
-// Websocket Client Side
+// WebSocket Client Side
 ////////////////////////
-
-// HTTP/HTTPS proxy to connect to
 var proxy = "http://0.0.0.0:9090";
 var options = url.parse(proxy);
 var agent = new HttpsProxyAgent(options);
 const ws = new WebSocket(URL, { agent: agent });
-// const ws = new WebSocket(URL);
 
-// Listen user's command
-const readline = require("readline");
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+const handleWebsocketOpen = async () => {
+  console.log("[NodeJS] WebSocket Client is opened!");
 
-function processCommand(command) {
-  rl.question("Please send or exit:\n", (newCommand) => {
-    const cmd = newCommand.toLowerCase();
-    if (cmd === "exit") {
-      ws.close();
-      rl.close();
-      return;
-    }
-
-    if (cmd === "send") {
-      handleWebsocketOpen();
-    } else {
-      console.log("wrong input");
-    }
-
-    processCommand(command);
-  });
-}
-
-rl.question("Please type send or exit:\n", (command) => {
-  const cmd = command.toLowerCase();
-  if (cmd === "exit") {
-    ws.close();
-    rl.close();
-    return;
-  }
-
-  if (cmd === "send") {
-    handleWebsocketOpen();
-  } else {
-    console.log("wrong input");
-  }
-
-  processCommand(command);
-});
-
-const handleWebsocketOpen = () => {
-  // Text
-  console.log("[NodeJS] Websocket Client is opened!");
-  ws.send(`Hello from Proxyman Websocket Client ${id}`);
+  // Send MsgPack JSON message
+  const obj = { data: "MsgPack" };
+  const packedJson = msgpack.encode({ type: "json", data: obj, id });
+  console.log(`[NodeJS] ⬆️ Send MsgPack JSON ${id}`);
+  ws.send(packedJson);
   id += 1;
 
-  // JSON
-  const obj = { name: "John", age: 30, city: "New York", id };
-  const myJSON = JSON.stringify(obj);
-  console.log(`[NodeJS] ⬆️ Send JSON ${id}`);
-  ws.send(myJSON);
-  id += 1;
+  // Send Zstd compressed raw string message using @mongodb-js/zstd
+  const zstdString = `This is a pure zstd compressed message ${id}`;
+  const stringBuffer = Buffer.from(zstdString, "utf8");
+  try {
+    const compressedZstd = await compress(stringBuffer); // Use async compress
+    console.log(`[NodeJS] ⬆️ Send pure Zstd ${id}`);
+    ws.send(compressedZstd);
+    id += 1;
+  } catch (err) {
+    console.error("[NodeJS] ❌ Zstd compression error:", err);
+  }
 
-  // Ping
+  // Send Deflated raw string message
+  const deflateString = `This is a deflated message ${id}`;
+  const deflateBuffer = Buffer.from(deflateString, "utf8");
+  try {
+    const compressedDeflate = zlib.deflateSync(deflateBuffer);
+    console.log(`[NodeJS] ⬆️ Send Deflated ${id}`);
+    ws.send(compressedDeflate);
+    id += 1;
+  } catch (err) {
+    console.error("[NodeJS] ❌ Deflate compression error:", err);
+  }
+
+  // Send Gzip compressed raw string message
+  const gzipString = `This is a gzipped message ${id}`;
+  const gzipBuffer = Buffer.from(gzipString, "utf8");
+  try {
+    const compressedGzip = zlib.gzipSync(gzipBuffer);
+    console.log(`[NodeJS] ⬆️ Send Gzip ${id}`);
+    ws.send(compressedGzip);
+    id += 1;
+  } catch (err) {
+    console.error("[NodeJS] ❌ Gzip compression error:", err);
+  }
+
+  // Keep the ping
   console.log("[NodeJS] ⬆️ Ping");
   ws.ping();
 };
 
-const handleWebsocketMessage = (data) => {
-  console.log("[NodeJS] ⬇️ Received: %s", data);
-};
+const handleWebsocketMessage = async (data) => {};
 
 const handleWebsocketPong = () => {
-  console.log("[NodeJS] ⬇️ Pong!");
-
-  // try to send a JSON again
-  const obj = { name: "Noah", items: [1, 2, 3, 4], id };
-  const myJSON = JSON.stringify(obj);
-  console.log(`[NodeJS] ⬆️ Send JSON ${id}`);
-  ws.send(myJSON);
-
-  id += 1;
+  // console.log("[NodeJS] ⬇️ Pong!");
+  // const obj = { name: "Noah", items: [1, 2, 3, 4], id };
+  // const msgpackObj = msgpack.encode({ type: "pong", data: obj, id });
+  // console.log(`[NodeJS] ⬆️ Send MsgPack JSON ${id}`);
+  // ws.send(msgpackObj);
+  // id += 1;
 };
 
 const handleWebsocketClose = () => {
@@ -143,7 +137,7 @@ ws.on("message", function message(data) {
 });
 
 ws.on("error", function message(err) {
-  console.log("[NodeJS] ❌ Err: %s", err);
+  console.log("[NodeJS] ❌ Error: %s", err);
 });
 
 ws.on("pong", () => {
@@ -152,4 +146,8 @@ ws.on("pong", () => {
 
 ws.on("close", function clear() {
   handleWebsocketClose();
+});
+
+ws.on("open", () => {
+  handleWebsocketOpen();
 });
