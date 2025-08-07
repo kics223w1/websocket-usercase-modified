@@ -14,17 +14,10 @@ npm install
 ### Main WebSocket Client (`main.js`)
 - **`npm run start_ws`** - Start WebSocket client using `ws://` protocol
 - **`npm run start_wss`** - Start WebSocket client using `wss://` protocol  
-- **`npm run start_wss_include_server`** - Start both WebSocket client (`wss://`) and local server
 
 ### Simple Client Test (`client.js`)
 - **`npm run ws-client-cert`** - Run secure WebSocket client with proxy support
 
-## Features
-
-- **Compression**: MsgPack, Zstd, Deflate, Gzip
-- **Protocols**: Both `ws://` and `wss://` support
-- **Proxy**: HTTP proxy support (port 9090)
-- **Server**: Optional local WebSocket server (port 8080)
 
 ## Usage Examples
 
@@ -34,9 +27,6 @@ npm run start_ws
 
 # Secure WebSocket client
 npm run start_wss
-
-# Client + Server mode
-npm run start_wss_include_server
 
 # Simple client test
 npm run ws-client-cert
