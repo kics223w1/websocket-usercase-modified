@@ -1,28 +1,45 @@
-### WebSocket Testing Guide
+# WebSocket Test Project
 
-This guide explains how to test both secure (WSS) and non-secure (WS) WebSocket connections.
+A Node.js WebSocket client/server project for testing different protocols and compression methods (MsgPack, Zstd, Deflate, Gzip).
 
-#### Prerequisites
+## Quick Start
 
-- Node.js installed
-- npm packages installed (`npm install`)
+Install dependencies:
+```bash
+npm install
+```
 
-#### Testing WebSocket (WS)
+## Available Scripts
 
-1. Start the WebSocket server:
-   ```bash
-   npm run start_ws
-   ```
-2. In the terminal:
-   - Type `send` to send test requests
-   - Type `exit` to close the connection
+### Main WebSocket Client (`main.js`)
+- **`npm run start_ws`** - Start WebSocket client using `ws://` protocol
+- **`npm run start_wss`** - Start WebSocket client using `wss://` protocol  
+- **`npm run start_wss_include_server`** - Start both WebSocket client (`wss://`) and local server
 
-#### Testing Secure WebSocket (WSS)
+### Simple Client Test (`client.js`)
+- **`npm run ws-client-cert`** - Run secure WebSocket client with proxy support
 
-1. Start the secure WebSocket server:
-   ```bash
-   npm run start_wss
-   ```
-2. In the terminal:
-   - Type `send` to send test requests
-   - Type `exit` to close the connection
+## Features
+
+- **Compression**: MsgPack, Zstd, Deflate, Gzip
+- **Protocols**: Both `ws://` and `wss://` support
+- **Proxy**: HTTP proxy support (port 9090)
+- **Server**: Optional local WebSocket server (port 8080)
+
+## Usage Examples
+
+```bash
+# Basic WebSocket client
+npm run start_ws
+
+# Secure WebSocket client
+npm run start_wss
+
+# Client + Server mode
+npm run start_wss_include_server
+
+# Simple client test
+npm run ws-client-cert
+```
+
+The client will connect through a proxy at `http://0.0.0.0:9090` and send various compressed message formats to test WebSocket functionality.
