@@ -17,6 +17,8 @@ npm install
 
 ### Simple Client Test (`client.js`)
 - **`npm run ws-client-cert`** - Run secure WebSocket client with proxy support
+- **`npm run ws-client-socks`** - Run WebSocket client via SOCKSv5 at `localhost:8889` (connects to public echo server)
+- **`npm run wss-client-socks`** - Run Secure WebSocket client via SOCKSv5 at `localhost:8889` (connects to public echo server)
 
 
 ## Usage Examples
@@ -30,6 +32,10 @@ npm run start_wss
 
 # Simple client test
 npm run ws-client-cert
+
+# WebSocket via SOCKSv5 at localhost:8889 (to internet echo services)
+npm run ws-client-socks
+npm run wss-client-socks
 ```
 
-The client will connect through a proxy at `http://0.0.0.0:9090` and send various compressed message formats to test WebSocket functionality.
+The client will connect through an HTTP proxy at `http://0.0.0.0:9090` for the default modes, or through a SOCKSv5 proxy at `socks5h://127.0.0.1:8889` for the SOCKS modes, and send various messages to test WebSocket functionality.

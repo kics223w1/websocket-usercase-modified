@@ -7,7 +7,9 @@
     "start_ws": "node main.js ws",
     "start_wss": "node main.js wss",
     "start_wss_include_server": "node main.js wss server",
-    "ws-client-cert": "node client.js"
+    "ws-client-cert": "node client.js",
+    "ws-client-socks": "node client.js socks-ws",
+    "wss-client-socks": "node client.js socks-wss"
   },
   "author": "",
   "license": "ISC",
@@ -15,6 +17,7 @@
     "@mongodb-js/zstd": "^2.0.1",
     "@msgpack/msgpack": "^3.1.1",
     "https-proxy-agent": "^5.0.1",
+    "socks-proxy-agent": "^8.0.2",
     "readline": "^1.3.0",
     "ws": "^8.11.0",
     "zstd-codec": "^0.1.5"
