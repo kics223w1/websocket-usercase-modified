@@ -19,10 +19,10 @@ switch (protocol) {
     URL = "wss://ws.postman-echo.com/raw";
     break;
   case "ws":
-    URL = "ws://echo.websocket.events";
+    URL = "ws://ws.ifelse.io";
     break;
   default:
-    URL = "ws://echo.websocket.events";
+    URL = "ws://ws.ifelse.io";
     break;
 }
 
