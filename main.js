@@ -16,7 +16,7 @@ const isEnabledWebsocketServer = myArgs[1];
 var URL = "";
 switch (protocol) {
   case "wss":
-    URL = "wss://ws.postman-echo.com/raw";
+    URL = "wss://ws.postman-echo.com/";
     break;
   case "ws":
     URL = "ws://ws.ifelse.io";

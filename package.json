@@ -9,7 +9,9 @@
     "start_wss_include_server": "node main.js wss server",
     "ws-client-cert": "node client.js",
     "ws-client-socks": "node client.js socks-ws",
-    "wss-client-socks": "node client.js socks-wss"
+    "wss-client-socks": "node client.js socks-wss",
+    "server": "node server.js",
+    "test": "node test-client.js"
   },
   "author": "",
   "license": "ISC",
