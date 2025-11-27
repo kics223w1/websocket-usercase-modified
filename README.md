@@ -4,12 +4,12 @@ A Node.js WebSocket client/server project for testing different protocols and co
 
 ## Quick Start
 
-Install dependencies:
-```bash
-npm install
-```
+
 
 ## Available Scripts
+
+### Server at ws://localhost:4000
+- ** `node server.js`
 
 ### Main WebSocket Client (`main.js`)
 - **`npm run start_ws`** - Start WebSocket client using `ws://` protocol

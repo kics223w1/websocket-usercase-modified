@@ -16,7 +16,7 @@ const isEnabledWebsocketServer = myArgs[1];
 var URL = "";
 switch (protocol) {
   case "wss":
-    URL = "wss://ws.postman-echo.com/";
+    URL = "wss://wss.httpbin-proxyman.xyz/";
     break;
   case "ws":
     URL = "ws://ws.ifelse.io";
